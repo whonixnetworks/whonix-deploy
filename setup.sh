@@ -336,7 +336,7 @@ figlet_motd
 
 echo -e "${BLUE}Creating completion flag...${RESET}"
 (sudo touch "$flag_file") &
-local flag_pid=$!
+flag_pid=$!
 spinner $flag_pid
 
 exit_message
