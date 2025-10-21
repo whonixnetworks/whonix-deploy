@@ -33,7 +33,7 @@ spinner() {
 
 # Check system compatibility
 check_system() {
-    echo -e "${BLUE}Checking system compatibility...${RESET}"
+    echo -e "${BLUE}Checking system compatibility${RESET}"
     if ! command -v lsb_release &>/dev/null && [ ! -f /etc/os-release ]; then
         echo -e "${RED}Unable to detect OS information. Exiting.${RESET}"
         return 1
@@ -61,7 +61,7 @@ check_system() {
     esac
 }
 
-# Add aliases without duplicates
+# Add aliases
 add_alias() {
     local name="$1" def="$2"
     if ! grep -q "^alias $name=" ~/.bashrc 2>/dev/null; then
@@ -69,19 +69,19 @@ add_alias() {
     fi
 }
 
-# Exit message if script already ran
+# Exit message
 exit_message_error() {
     clear
     echo -e "${RED}Setup script has already executed${RESET}"
     sleep 0.3
-    echo -e "${RED}Aborting script.${RESET}"
+    echo -e "${RED}Aborting script${RESET}"
 }
 
 # Prevent re-run
 if [ -f "$flag_file" ]; then
     clear
-    echo -e "${YELLOW}This script has already been run previously.${RESET}"
-    echo -e "${YELLOW}To re-run, delete $flag_file and try again.${RESET}"
+    echo -e "${YELLOW}This script has already been run previously${RESET}"
+    echo -e "${YELLOW}To re-run, delete $flag_file and try again${RESET}"
     exit_message_error
     exit 0
 fi
@@ -97,11 +97,11 @@ if ! check_system; then
 fi
 
 read -rp "Do you want to continue? (y/n) " answer
-[[ "$answer" =~ ^[yY]$ ]] || { echo -e "${YELLOW}Exiting...${RESET}"; exit 0; }
+[[ "$answer" =~ ^[yY]$ ]] || { echo -e "${YELLOW}Exiting${RESET}"; exit 0; }
 
-echo -e "${BLUE}This script requires sudo privileges.${RESET}"
+echo -e "${BLUE}This script requires sudo privileges${RESET}"
 if ! sudo -v; then
-    echo -e "${RED}Failed to obtain sudo privileges.${RESET}"
+    echo -e "${RED}Failed to obtain sudo privileges${RESET}"
     exit 1
 fi
 
@@ -110,14 +110,14 @@ read -rp "Do you want to configure SSH? (y/n) " ssh_answer
 if [[ "$ssh_answer" =~ ^[yY]$ ]]; then
     read -rp "Import existing SSH keys or generate new keys? (gen/imp) " paste_answer
     if [[ "$paste_answer" == "imp" ]]; then
-        echo -e "${YELLOW}Paste your SSH public key (then press Enter on an empty line):${RESET}"
+        echo -e "${YELLOW}Paste your SSH public key (then press Enter twice):${RESET}"
         user_pubkey=""
         while IFS= read -r line; do
             [[ -z "$line" ]] && break
             user_pubkey+="$line"$'\n'
         done
 
-        echo -e "${YELLOW}Paste your SSH private key (then press Enter on an empty line):${RESET}"
+        echo -e "${YELLOW}Paste your SSH private key (then press Enter twice):${RESET}"
         user_privkey=""
         while IFS= read -r line; do
             [[ -z "$line" ]] && break
@@ -128,31 +128,31 @@ fi
 
 # Update and install packages
 update_install() {
-    echo -e "${BLUE}Updating system packages...${RESET}"
+    echo -e "${BLUE}Updating system packages${RESET}"
     (sudo apt-get update -y >/dev/null 2>&1) & spinner $!
-    echo -e "${GREEN}System updated.${RESET}"
+    echo -e "${GREEN}System updated${RESET}"
 
-    echo -e "${BLUE}Installing required packages...${RESET}"
+    echo -e "${BLUE}Installing required packages${RESET}"
     (sudo apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
-    echo -e "${GREEN}Packages installed.${RESET}"
+    echo -e "${GREEN}Packages installed${RESET}"
 
-    echo -e "${BLUE}Upgrading system...${RESET}"
+    echo -e "${BLUE}Upgrading system${RESET}"
     (sudo apt-get upgrade -y >/dev/null 2>&1) & spinner $!
-    echo -e "${GREEN}Upgrade complete.${RESET}"
+    echo -e "${GREEN}Upgrade complete${RESET}"
 }
 
 # Add user to docker group
 usermods() {
     local user
     user="$(whoami)"
-    echo -e "${BLUE}Adding $user to docker group...${RESET}"
+    echo -e "${BLUE}Adding $user to docker group${RESET}"
     (sudo usermod -aG docker "$user") & spinner $!
-    echo -e "${GREEN}User added to docker group.${RESET}"
+    echo -e "${GREEN}User added to docker group${RESET}"
 }
 
-# Set useful aliases
+# Set aliases
 set_aliases() {
-    echo -e "${BLUE}Adding useful aliases...${RESET}"
+    echo -e "${BLUE}Adding aliases${RESET}"
     (
         cp ~/.bashrc ~/.bashrc.bak
         add_alias "cdc" "cat docker-compose.yml"
@@ -172,9 +172,9 @@ set_aliases() {
 
 # SSH + UFW hardening
 ssh_ufw_hardening() {
-    echo -e "${BLUE}Configuring UFW...${RESET}"
+    echo -e "${BLUE}Configuring UFW${RESET}"
     (sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw) & spinner $!
-    echo -e "${GREEN}UFW IPv6 disabled.${RESET}"
+    echo -e "${GREEN}UFW IPv6 disabled${RESET}"
 
     local user hostname
     user="$(whoami)"
@@ -186,32 +186,32 @@ ssh_ufw_hardening() {
                 sudo rm -rf ~/.ssh
                 mkdir -p ~/.ssh
                 if [ -n "$user_pubkey" ]; then
-                    echo -e "${BLUE}Adding public key...${RESET}"
+                    echo -e "${BLUE}Adding public key${RESET}"
                     (echo "$user_pubkey" > ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys) & spinner $!
-                    echo -e "${GREEN}Public key added.${RESET}"
+                    echo -e "${GREEN}Public key added${RESET}"
                 fi
                 if [ -n "$user_privkey" ]; then
-                    echo -e "${BLUE}Adding private key...${RESET}"
+                    echo -e "${BLUE}Adding private key${RESET}"
                     (echo "$user_privkey" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa) & spinner $!
-                    echo -e "${GREEN}Private key added.${RESET}"
+                    echo -e "${GREEN}Private key added${RESET}"
                 fi
                 ;;
             *)
-                echo -e "${BLUE}Generating new RSA key pair...${RESET}"
+                echo -e "${BLUE}Generating new RSA key pair${RESET}"
                 sudo rm -rf ~/.ssh
                 mkdir -p ~/.ssh
                 (ssh-keygen -t rsa -b 4096 -C "${user}@${hostname}" -f ~/.ssh/id_rsa -N "" -q) & spinner $!
                 (cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys && chmod 600 ~/.ssh/id_rsa) & spinner $!
-                echo -e "${GREEN}SSH keys generated.${RESET}"
-                echo -e "\n${RED}IMPORTANT: Copy your private key from ~/.ssh/id_rsa before disconnecting.${RESET}\n"
+                echo -e "${GREEN}SSH keys generated${RESET}"
+                echo -e "\n${RED}IMPORTANT: Copy your private key from ~/.ssh/id_rsa before disconnecting${RESET}\n"
                 ;;
         esac
 
-        echo -e "${BLUE}Backing up SSH config...${RESET}"
+        echo -e "${BLUE}Backing up SSH config${RESET}"
         (sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak) & spinner $!
-        echo -e "${GREEN}Backup created.${RESET}"
+        echo -e "${GREEN}Backup created${RESET}"
 
-        echo -e "${BLUE}Hardening SSH configuration...${RESET}"
+        echo -e "${BLUE}Hardening SSH configuration${RESET}"
         (
             sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
             sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
@@ -219,34 +219,34 @@ ssh_ufw_hardening() {
             sudo sed -i 's/^#\?UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
             sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
         ) & spinner $!
-        echo -e "${GREEN}SSH configuration hardened.${RESET}"
+        echo -e "${GREEN}SSH configuration hardened${RESET}"
 
-        echo -e "${BLUE}Reloading SSH service...${RESET}"
+        echo -e "${BLUE}Reloading SSH service${RESET}"
         (sudo systemctl reload ssh) & spinner $!
-        echo -e "${GREEN}SSH service reloaded.${RESET}"
+        echo -e "${GREEN}SSH service reloaded${RESET}"
     else
-        echo -e "${YELLOW}Skipping SSH configuration.${RESET}"
+        echo -e "${YELLOW}Skipping SSH configuration${RESET}"
     fi
 }
 
 # Timezone setup
 set_timezone() {
-    echo -e "${BLUE}Setting timezone...${RESET}"
+    echo -e "${BLUE}Setting timezone${RESET}"
     (timezone=$(curl -s http://ip-api.com/line/?fields=timezone || echo "")) & spinner $!
     if [ -n "$timezone" ]; then
         (sudo timedatectl set-timezone "$timezone") & spinner $!
         echo -e "${GREEN}Timezone set to $timezone${RESET}"
     else
-        echo -e "${YELLOW}Could not determine timezone automatically.${RESET}"
+        echo -e "${YELLOW}Could not determine timezone automatically${RESET}"
         timezone="unknown"
     fi
 }
 
 # MOTD
 figlet_motd() {
-    echo -e "${BLUE}Creating MOTD...${RESET}"
+    echo -e "${BLUE}Creating MOTD${RESET}"
     (figlet "$(hostname)" | sudo tee /etc/motd >/dev/null) & spinner $!
-    echo -e "${GREEN}MOTD created.${RESET}"
+    echo -e "${GREEN}MOTD created${RESET}"
 }
 
 # Exit message
@@ -261,8 +261,7 @@ exit_message() {
     fi
 }
 
-# Main execution
-echo -e "${BLUE}Starting system setup...${RESET}"
+# main
 update_install
 usermods
 set_aliases
@@ -270,11 +269,11 @@ ssh_ufw_hardening
 set_timezone
 figlet_motd
 
-echo -e "${BLUE}Creating completion flag...${RESET}"
+echo -e "${BLUE}Creating completion flag${RESET}"
 (sudo touch "$flag_file") & spinner $!
 exit_message
 
-read -rp "Press Enter to reboot the system (or Ctrl+C to cancel)..."
-echo -e "${BLUE}Rebooting system...${RESET}"
+read -rp "Press Enter to reboot the system (or Ctrl+C to cancel)"
+echo -e "${BLUE}Rebooting system${RESET}"
 sleep 2
 sudo reboot
