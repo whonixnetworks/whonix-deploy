@@ -15,7 +15,7 @@ RESET="\033[0m"
 
 # Configuration
 timezone="unknown"
-packages=(btop tmux neofetch mc htop iotop iftop wget curl nano git coreutils rclone rsync python3 jq python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
+packages=(btop tmux neofetch mc htop iotop iftop wget curl nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
 flag_file="/var/log/setup-complete.flag"
 
 # Function to show spinner
@@ -30,7 +30,7 @@ spinner() {
         sleep $delay
         printf "\b\b\b\b\b\b"
     done
-    printf "      \b\b\b\b\b\b"
+    printf "    \b\b\b\b"
 }
 
 # System compatibility check
@@ -137,30 +137,21 @@ fi
 # ===== MAIN SCRIPT FUNCTIONS =====
 update_install() {
     echo -e "${BLUE}Updating system packages...${RESET}"
-    sudo apt-get update >/dev/null 2>&1 &
+    (sudo apt-get update >/dev/null 2>&1) &
     local update_pid=$!
-    spinner $update_pid &
-    local spinner_pid=$!
-    wait $update_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $update_pid
     echo -e "${GREEN}Updates complete${RESET}"
     
     echo -e "${BLUE}Installing packages...${RESET}"
-    sudo apt-get install -y "${packages[@]}" >/dev/null 2>&1 &
+    (sudo apt-get install -y "${packages[@]}" >/dev/null 2>&1) &
     local install_pid=$!
-    spinner $install_pid &
-    local spinner_pid=$!
-    wait $install_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $install_pid
     echo -e "${GREEN}Packages installed${RESET}"
     
     echo -e "${BLUE}Upgrading system...${RESET}"
-    sudo apt-get upgrade -y >/dev/null 2>&1 &
+    (sudo apt-get upgrade -y >/dev/null 2>&1) &
     local upgrade_pid=$!
-    spinner $upgrade_pid &
-    local spinner_pid=$!
-    wait $upgrade_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $upgrade_pid
     echo -e "${GREEN}Upgrade complete${RESET}"
 }
 
@@ -168,12 +159,9 @@ usermods() {
     local user
     user="$(whoami)"
     echo -e "${BLUE}Adding $user to docker group...${RESET}"
-    sudo usermod -aG docker "$user" &
+    (sudo usermod -aG docker "$user") &
     local usermod_pid=$!
-    spinner $usermod_pid &
-    local spinner_pid=$!
-    wait $usermod_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $usermod_pid
     echo -e "${GREEN}User/Group modifications complete${RESET}"
 }
 
@@ -194,21 +182,15 @@ set_aliases() {
         add_alias "dps" 'docker ps --format '\''{{.Names}}'\'''
     ) &
     local aliases_pid=$!
-    spinner $aliases_pid &
-    local spinner_pid=$!
-    wait $aliases_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $aliases_pid
     echo -e "${GREEN}Aliases added to ~/.bashrc${RESET}"
 }
 
 ssh_ufw_hardening() {
     echo -e "${BLUE}Configuring UFW...${RESET}"
-    sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw &
+    (sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw) &
     local ufw_pid=$!
-    spinner $ufw_pid &
-    local spinner_pid=$!
-    wait $ufw_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $ufw_pid
     echo -e "${GREEN}UFW IPv6 disabled${RESET}"
     
     local user hostname
@@ -227,10 +209,7 @@ ssh_ufw_hardening() {
                         chmod 644 ~/.ssh/authorized_keys
                     ) &
                     local paste_pid=$!
-                    spinner $paste_pid &
-                    local spinner_pid=$!
-                    wait $paste_pid
-                    kill $spinner_pid 2>/dev/null || true
+                    spinner $paste_pid
                     echo -e "${GREEN}Public key added successfully${RESET}"
                     
                     if [ -n "$user_privkey" ]; then
@@ -240,10 +219,7 @@ ssh_ufw_hardening() {
                             chmod 600 ~/.ssh/id_rsa
                         ) &
                         local pasteid_pid=$!
-                        spinner $pasteid_pid &
-                        local spinner_pid=$!
-                        wait $pasteid_pid
-                        kill $spinner_pid 2>/dev/null || true
+                        spinner $pasteid_pid
                         echo -e "${GREEN}Private key added successfully${RESET}"
                     fi
                 else
@@ -255,12 +231,9 @@ ssh_ufw_hardening() {
                 echo -e "${BLUE}Generating RSA keys${RESET}"
                 sudo rm -rf ~/.ssh
                 mkdir -p ~/.ssh
-                ssh-keygen -t rsa -b 4096 -C "${user}@${hostname}" -f ~/.ssh/id_rsa -N "" -q &
+                (ssh-keygen -t rsa -b 4096 -C "${user}@${hostname}" -f ~/.ssh/id_rsa -N "" -q) &
                 local keygen_pid=$!
-                spinner $keygen_pid &
-                local spinner_pid=$!
-                wait $keygen_pid
-                kill $spinner_pid 2>/dev/null || true
+                spinner $keygen_pid
                 
                 echo -e "${BLUE}Setting up authorized_keys...${RESET}"
                 (
@@ -269,10 +242,7 @@ ssh_ufw_hardening() {
                     chmod 600 ~/.ssh/id_rsa
                 ) &
                 local setup_pid=$!
-                spinner $setup_pid &
-                local spinner_pid=$!
-                wait $setup_pid
-                kill $spinner_pid 2>/dev/null || true
+                spinner $setup_pid
                 echo -e "${GREEN}SSH keys generated${RESET}"
                 
                 echo ""
@@ -289,12 +259,9 @@ ssh_ufw_hardening() {
         esac
         
         echo -e "${BLUE}Creating SSH config backup...${RESET}"
-        sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak &
+        (sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak) &
         local cp_pid=$!
-        spinner $cp_pid &
-        local spinner_pid=$!
-        wait $cp_pid
-        kill $spinner_pid 2>/dev/null || true
+        spinner $cp_pid
         echo -e "${GREEN}Backup created at /etc/ssh/sshd_config.bak${RESET}"
         
         echo -e "${BLUE}Hardening SSH configuration...${RESET}"
@@ -306,18 +273,12 @@ ssh_ufw_hardening() {
             sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
         ) &
         local sed_pid=$!
-        spinner $sed_pid &
-        local spinner_pid=$!
-        wait $sed_pid
-        kill $spinner_pid 2>/dev/null || true
+        spinner $sed_pid
         
         echo -e "${BLUE}Reloading SSH service...${RESET}"
-        sudo systemctl reload ssh &
+        (sudo systemctl reload ssh) &
         local reload_pid=$!
-        spinner $reload_pid &
-        local spinner_pid=$!
-        wait $reload_pid
-        kill $spinner_pid 2>/dev/null || true
+        spinner $reload_pid
         echo -e "${GREEN}SSH configured for key-only authentication${RESET}"
     else
         echo -e "${YELLOW}Skipping SSH configuration...${RESET}"
@@ -326,20 +287,14 @@ ssh_ufw_hardening() {
 
 set_timezone() {
     echo -e "${BLUE}Setting timezone...${RESET}"
-    timezone=$(curl -s http://ip-api.com/line/?fields=timezone 2>/dev/null || echo "") &
+    (timezone=$(curl -s http://ip-api.com/line/?fields=timezone 2>/dev/null || echo "")) &
     local curl_pid=$!
-    spinner $curl_pid &
-    local spinner_pid=$!
-    wait $curl_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $curl_pid
     
     if [ -n "$timezone" ]; then
-        sudo timedatectl set-timezone "$timezone" 2>/dev/null &
+        (sudo timedatectl set-timezone "$timezone" 2>/dev/null) &
         local tz_pid=$!
-        spinner $tz_pid &
-        local spinner_pid=$!
-        wait $tz_pid
-        kill $spinner_pid 2>/dev/null || true
+        spinner $tz_pid
         echo -e "${GREEN}Timezone set to $timezone${RESET}"
     else
         echo -e "${YELLOW}Could not determine timezone automatically${RESET}"
@@ -349,14 +304,9 @@ set_timezone() {
 
 figlet_motd() {
     echo -e "${BLUE}Creating MOTD...${RESET}"
-    (
-        figlet "$(hostname)" | sudo tee /etc/motd >/dev/null
-    ) &
+    (figlet "$(hostname)" | sudo tee /etc/motd >/dev/null) &
     local motd_pid=$!
-    spinner $motd_pid &
-    local spinner_pid=$!
-    wait $motd_pid
-    kill $spinner_pid 2>/dev/null || true
+    spinner $motd_pid
     echo -e "${GREEN}MOTD set${RESET}"
 }
 
@@ -373,9 +323,10 @@ exit_message() {
     fi
 }
 
-# Main
+# ===== MAIN EXECUTION =====
 echo -e "${BLUE}Starting system setup...${RESET}"
 
+# Uncomment the functions you want to run
 update_install
 usermods
 set_aliases
@@ -384,12 +335,9 @@ set_timezone
 figlet_motd
 
 echo -e "${BLUE}Creating completion flag...${RESET}"
-sudo touch "$flag_file" &
+(sudo touch "$flag_file") &
 local flag_pid=$!
-spinner $flag_pid &
-local spinner_pid=$!
-wait $flag_pid
-kill $spinner_pid 2>/dev/null || true
+spinner $flag_pid
 
 exit_message
 
