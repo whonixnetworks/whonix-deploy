@@ -1,27 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Whonix Debian/Ubuntu Setup Script
 
 <p align="center">
@@ -47,9 +23,16 @@ This script performs a comprehensive initial setup for new servers:
 
 ## Quick Start
 
-1. Download the script:wget https://raw.githubusercontent.com/whonixnetworks/whonix-deploy/main/setup.sh
-chmod +x setup.sh
-2. Run it:./setup.sh
+1. Download the script:  
+```shell
+wget https://raw.githubusercontent.com/whonixnetworks/whonix-deploy/main/setup.sh && chmod +x setup.sh
+```
+
+2. Run it:
+```shell
+./setup.sh
+```
+
 3. Follow the prompts - the script will ask you about SSH configuration and guide you through the process.
 
 ## What Gets Installed
