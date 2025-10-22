@@ -1,7 +1,7 @@
 # Whonix Initium
 
 <p align="center">
-  <img src="/whonix-deploy.png" alt="Initium Logo" width="200"/>
+  <img src="/initium.png" alt="Initium Logo" width="200"/>
 </p>
 
 <p align="center">
