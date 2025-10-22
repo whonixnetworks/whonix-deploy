@@ -8,7 +8,7 @@
   <b>Initium</b> <br/>
   <i>/ɪˈnɪtiəm/</i> <br/>
   <small><i>noun</i></small> <br/>
-  <i>"the beginning; the point where something starts"</i>
+  <i>"the beginning;"</i>
 </p>
 
 
