@@ -1,10 +1,13 @@
-# Whonix Debian/Ubuntu Setup Script
+# Whonix Initium
 
 <p align="center">
   <img src="/whonix-deploy.png" alt="Backupscripts Logo" width="200"/>
 </p>
 
-A bash script to automate the initial setup of Debian/Ubuntu servers for home lab environments. This script handles the boring stuff so you can get to the fun part - actually using your server.
+A bash script to automate the initial setup of Debian/Ubuntu servers for home lab environments.  
+
+> **Initium**
+> *~ the beginning*
 
 ## What It Does
 
