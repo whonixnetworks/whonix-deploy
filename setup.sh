@@ -74,6 +74,10 @@ exit_message_error() {
     echo -e "${RED}Setup script has already executed${RESET}"
     sleep 0.3
     echo -e "${RED}Aborting script${RESET}"
+    sleep 0.3
+    echo -e "${YELLOW}To override; run command;${RESET}"
+    sleep 0.3
+    echo -e "${RED}sudo rm /var/log/setup-complete.flag${RESET}"
 }
 
 # Prevent re-run
@@ -81,7 +85,6 @@ if [ -f "$flag_file" ]; then
     clear
     echo -e "${YELLOW}This script has already been run previously${RESET}"
     echo -e "${YELLOW}To re-run, delete $flag_file and try again${RESET}"
-    echo -e "${YELLOW}sudo rm /var/log/setup-complete.flag${RESET}"
     exit_message_error
     exit 0
 fi
