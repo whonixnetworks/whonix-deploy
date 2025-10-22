@@ -88,8 +88,9 @@ fi
 
 clear
 echo -e "${YELLOW}==============================================${RESET}"
-echo -e "${YELLOW}Home Lab Debian/Ubuntu Setup Script${RESET}"
+echo -e "${YELLOW}Whonix Initium${RESET}" echo -e "${YELLOW}For Debian/Ubuntu${RESET}"
 echo -e "${YELLOW}==============================================${RESET}\n"
+
 echo -e "${RED}WARNING: This script may cause SSH lockouts.${RESET}\n"
 
 if ! check_system; then
