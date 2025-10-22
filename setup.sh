@@ -231,15 +231,32 @@ ssh_ufw_hardening() {
 
 # Timezone setup
 set_timezone() {
-    echo -e "${BLUE}Setting timezone${RESET}"
-    (timezone=$(curl -s http://ip-api.com/line/?fields=timezone || echo "")) & spinner $!
-    if [ -n "$timezone" ]; then
-        (sudo timedatectl set-timezone "$timezone") & spinner $!
-        echo -e "${GREEN}Timezone set to $timezone${RESET}"
-    else
-        echo -e "${YELLOW}Could not determine timezone automatically${RESET}"
-        timezone="unknown"
-    fi
+  echo -e "${BLUE}Setting timezone${RESET}"
+
+  # Start curl in background and capture PID for spinner
+  tmpfile=$(mktemp)
+  curl -s 'http://ip-api.com/json/?fields=status,message,timezone' >"$tmpfile" &
+  curl_pid=$!
+  spinner "$curl_pid"
+  wait "$curl_pid"
+
+  # Parse timezone only if status is success
+  status=$(jq -r '.status // empty' <"$tmpfile")
+  if [ "$status" = "success" ]; then
+    timezone=$(jq -r '.timezone // empty' <"$tmpfile")
+  else
+    timezone=""
+  fi
+  rm -f "$tmpfile"
+
+  if [ -n "$timezone" ]; then
+    (sudo timedatectl set-timezone "$timezone") &
+    spinner $!
+    echo -e "${GREEN}Timezone set to $timezone${RESET}"
+  else
+    echo -e "${YELLOW}Could not determine timezone automatically${RESET}"
+    timezone="unknown"
+  fi
 }
 
 # MOTD
