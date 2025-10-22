@@ -99,7 +99,7 @@ fi
 read -rp "Do you want to continue? (y/n) " answer
 [[ "$answer" =~ ^[yY]$ ]] || { echo -e "${YELLOW}Exiting${RESET}"; exit 0; }
 
-echo -e "${BLUE}This script requires sudo privileges${RESET}"
+echo -e "${RED}This script requires sudo privileges${RESET}"
 if ! sudo -v; then
     echo -e "${RED}Failed to obtain sudo privileges${RESET}"
     exit 1
@@ -268,7 +268,6 @@ figlet_motd() {
 
 # Exit message
 exit_message() {
-    clear
     echo -e "${GREEN}================================${RESET}"
     echo -e "${GREEN}Setup Complete!${RESET}"
     echo -e "${GREEN}================================${RESET}"
