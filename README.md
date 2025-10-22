@@ -1,11 +1,16 @@
 # Whonix Initium
 
 <p align="center">
-  <img src="/whonix-deploy.png" alt="Backupscripts Logo" width="200"/>
-</p>  
+  <img src="/whonix-deploy.png" alt="Initium Logo" width="200"/>
+</p>
 
-### <center> **Initium**</center>  
-#### <center> *~ the beginning*</center>
+<p align="center">
+  <b>Initium</b> <br/>
+  <i>/ɪˈnɪtiəm/</i> <br/>
+  <small><i>noun</i></small> <br/>
+  <i>"the beginning; the point where something starts"</i>
+</p>
+
 
 A bash script to automate the initial setup of Debian/Ubuntu servers for home lab environments.  
 
