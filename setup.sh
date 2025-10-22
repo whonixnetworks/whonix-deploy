@@ -71,7 +71,6 @@ add_alias() {
 
 # Exit message
 exit_message_error() {
-    clear
     echo -e "${RED}Setup script has already executed${RESET}"
     sleep 0.3
     echo -e "${RED}Aborting script${RESET}"
@@ -82,6 +81,7 @@ if [ -f "$flag_file" ]; then
     clear
     echo -e "${YELLOW}This script has already been run previously${RESET}"
     echo -e "${YELLOW}To re-run, delete $flag_file and try again${RESET}"
+    echo -e "${YELLOW}sudo rm /var/log/setup-complete.flag${RESET}"
     exit_message_error
     exit 0
 fi
