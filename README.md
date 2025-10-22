@@ -33,7 +33,7 @@ This script performs a comprehensive initial setup for new servers:
 
 1. Download the script:  
 ```shell
-wget https://raw.githubusercontent.com/whonixnetworks/whonix-deploy/main/setup.sh && chmod +x setup.sh
+wget https://raw.githubusercontent.com/whonixnetworks/initium/main/setup.sh && chmod +x setup.sh
 ```
 
 2. Run it:
@@ -42,6 +42,11 @@ wget https://raw.githubusercontent.com/whonixnetworks/whonix-deploy/main/setup.s
 ```
 
 3. Follow the prompts - the script will ask you about SSH configuration and guide you through the process.
+
+**Lazy Commands**  
+```shell
+wget https://raw.githubusercontent.com/whonixnetworks/initium/main/setup.sh && chmod +x setup.sh && ./setup.sh
+```  
 
 ## What Gets Installed
 
