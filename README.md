@@ -4,8 +4,8 @@
   <img src="/whonix-deploy.png" alt="Backupscripts Logo" width="200"/>
 </p>
 
-<center>> **Initium**</center>  
-> *~ the beginning*
+<center> #### **Initium**</center>  
+<center> *~ the beginning*</center>
 
 A bash script to automate the initial setup of Debian/Ubuntu servers for home lab environments.  
 
