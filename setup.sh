@@ -121,13 +121,6 @@ if [[ "$ssh_answer" =~ ^[yY]$ ]]; then
             [[ -z "$line" ]] && break
             user_pubkey+="$line"$'\n'
         done
-
-        echo -e "${YELLOW}Paste your SSH private key (then press Enter twice):${RESET}"
-        user_privkey=""
-        while IFS= read -r line; do
-            [[ -z "$line" ]] && break
-            user_privkey+="$line"$'\n'
-        done
     fi
 fi
 
