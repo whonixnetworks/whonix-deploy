@@ -15,7 +15,7 @@ RESET="\033[0m"
 
 # Configuration
 timezone="unknown"
-packages=(btop tmux neofetch mc htop iotop iftop wget curl nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
+packages=(btop tmux neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
 flag_file="/var/log/setup-complete.flag"
 
 # Spinner / throbber
