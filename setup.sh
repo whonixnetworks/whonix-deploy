@@ -140,10 +140,10 @@ update_install() {
     echo -e "${BLUE}Installing required packages${RESET}"
     (sudo apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}Packages installed${RESET}"
-
     echo -e "${BLUE}Upgrading system${RESET}"
-    (sudo apt-get upgrade -y >/dev/null 2>&1) & spinner $!
-    echo -e "${GREEN}Upgrade complete${RESET}"
+    sudo apt-get autoremove -y >/dev/null 2>&1) & spinner $!
+    sudo apt-get install -y
+    echo -e "${GREEN}Upgrade complete${RESET}"  
 }
 
 # Add user to docker group
