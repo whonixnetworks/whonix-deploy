@@ -78,6 +78,7 @@ exit_message_error() {
     echo -e "${YELLOW}To override; run command;${RESET}"
     sleep 0.3
     echo -e "${RED}sudo rm /var/log/setup-complete.flag${RESET}"
+    echo -e "\n${RED}IMPORTANT: Copy your private key from ~/.ssh/id_rsa before disconnecting${RESET}\n"
 }
 
 # Prevent re-run
