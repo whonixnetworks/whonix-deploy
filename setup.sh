@@ -15,7 +15,7 @@ RESET="\033[0m"
 
 # Configuration
 timezone="unknown"
-packages=(btop tmux neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
+packages=(btop tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
 flag_file="/var/log/setup-complete.flag"
 
 # Spinner / throbber
@@ -92,7 +92,8 @@ fi
 
 clear
 echo -e "${YELLOW}==============================================${RESET}"
-echo -e "${YELLOW}Whonix Initium${RESET}" echo -e "${YELLOW}For Debian/Ubuntu${RESET}"
+echo -e "${YELLOW}Whonix Initium${RESET}"
+echo -e "${YELLOW}For Debian/Ubuntu${RESET}"
 echo -e "${YELLOW}==============================================${RESET}\n"
 
 echo -e "${RED}WARNING: This script may cause SSH lockouts.${RESET}\n"
@@ -127,15 +128,16 @@ fi
 # Update and install packages
 update_install() {
     echo -e "${BLUE}Updating system packages${RESET}"
-    (sudo apt-get update -y >/dev/null 2>&1) & spinner $!
+    (sudo DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}System updated${RESET}"
 
     echo -e "${BLUE}Installing required packages${RESET}"
-    (sudo apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
+    (sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}Packages installed${RESET}"
+    
     echo -e "${BLUE}Upgrading system${RESET}"
-    sudo apt-get autoremove -y >/dev/null 2>&1) & spinner $!
-    sudo apt-get install -y
+    (sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >/dev/null 2>&1) & spinner $!
+    (sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}Upgrade complete${RESET}"  
 }
 
@@ -188,11 +190,6 @@ ssh_ufw_hardening() {
                     (echo "$user_pubkey" > ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys) & spinner $!
                     echo -e "${GREEN}Public key added${RESET}"
                 fi
-                if [ -n "$user_privkey" ]; then
-                    echo -e "${BLUE}Adding private key${RESET}"
-                    (echo "$user_privkey" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa) & spinner $!
-                    echo -e "${GREEN}Private key added${RESET}"
-                fi
                 ;;
             *)
                 echo -e "${BLUE}Generating new RSA key pair${RESET}"
@@ -229,32 +226,33 @@ ssh_ufw_hardening() {
 
 # Timezone setup
 set_timezone() {
-  echo -e "${BLUE}Setting timezone${RESET}"
+    echo -e "${BLUE}Setting timezone${RESET}"
 
-  # Start curl in background and capture PID for spinner
-  tmpfile=$(mktemp)
-  curl -s 'http://ip-api.com/json/?fields=status,message,timezone' >"$tmpfile" &
-  curl_pid=$!
-  spinner "$curl_pid"
-  wait "$curl_pid"
+    # Start curl in background and capture PID for spinner
+    tmpfile=$(mktemp)
+    curl -s 'http://ip-api.com/json/?fields=status,message,timezone' >"$tmpfile" &
+    curl_pid=$!
+    spinner "$curl_pid"
+    wait "$curl_pid"
 
-  # Parse timezone only if status is success
-  status=$(jq -r '.status // empty' <"$tmpfile")
-  if [ "$status" = "success" ]; then
-    timezone=$(jq -r '.timezone // empty' <"$tmpfile")
-  else
-    timezone=""
-  fi
-  rm -f "$tmpfile"
+    # Parse timezone only if status is success
+    status=$(jq -r '.status // empty' <"$tmpfile")
+    if [ "$status" = "success" ]; then
+        timezone=$(jq -r '.timezone // empty' <"$tmpfile")
+    else
+        timezone=""
+    fi
+    rm -f "$tmpfile"
 
-  if [ -n "$timezone" ]; then
-    (sudo timedatectl set-timezone "$timezone") &
-    spinner $!
-    echo -e "${GREEN}Timezone set to $timezone${RESET}"
-  else
-    echo -e "${YELLOW}Could not determine timezone automatically${RESET}"
-    timezone="unknown"
-  fi
+    if [ -n "$timezone" ]; then
+        (sudo timedatectl set-timezone "$timezone") & spinner $!
+        echo -e "${GREEN}Timezone set to $timezone${RESET}"
+    else
+        echo -e "${YELLOW}Could not determine timezone automatically, defaulting to America/New_York${RESET}"
+        (sudo timedatectl set-timezone "America/New_York") & spinner $!
+        timezone="America/New_York"
+        echo -e "${GREEN}Timezone set to $timezone${RESET}"
+    fi
 }
 
 # MOTD
