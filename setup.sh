@@ -111,17 +111,20 @@ if ! sudo -v; then
     exit 1
 fi
 
+# Variables for key import/generation
+ssh_key_source="none"
+key_url=""
+
 # SSH configuration
 read -rp "Do you want to configure SSH? (y/n) " ssh_answer
 if [[ "$ssh_answer" =~ ^[yY]$ ]]; then
-    read -rp "Import existing SSH keys or generate new keys? (gen/imp) " paste_answer
-    if [[ "$paste_answer" == "imp" ]]; then
-        echo -e "${YELLOW}Paste your SSH public key (then press Enter twice):${RESET}"
-        user_pubkey=""
-        while IFS= read -r line; do
-            [[ -z "$line" ]] && break
-            user_pubkey+="$line"$'\n'
-        done
+    read -rp "Import keys via URL or generate new keys? (url/gen) " ssh_key_source
+    if [[ "$ssh_key_source" == "url" ]]; then
+        read -rp "Enter the URL for your SSH public key (e.g., https://github.com/user.keys): " key_url
+        if [ -z "$key_url" ]; then
+            echo -e "${RED}No URL provided. Defaulting to key generation.${RESET}"
+            ssh_key_source="gen"
+        fi
     fi
 fi
 
@@ -134,7 +137,7 @@ update_install() {
     echo -e "${BLUE}Installing required packages${RESET}"
     (sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}Packages installed${RESET}"
-    
+
     echo -e "${BLUE}Upgrading system${RESET}"
     (sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >/dev/null 2>&1) & spinner $!
     (sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y >/dev/null 2>&1) & spinner $!
@@ -181,22 +184,33 @@ ssh_ufw_hardening() {
     hostname="$(hostname)"
 
     if [[ "$ssh_answer" =~ ^[yY]$ ]]; then
-        case "$paste_answer" in
-            imp)
+        case "$ssh_key_source" in
+            url)
                 sudo rm -rf ~/.ssh
                 mkdir -p ~/.ssh
-                if [ -n "$user_pubkey" ]; then
-                    echo -e "${BLUE}Adding public key${RESET}"
-                    (echo "$user_pubkey" > ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys) & spinner $!
-                    echo -e "${GREEN}Public key added${RESET}"
+                echo -e "${BLUE}Fetching public key from URL: $key_url${RESET}"
+                # Use curl to fetch the key and check for success
+                if curl -sSL "$key_url" > ~/.ssh/authorized_keys; then
+                    # Verify the key file is not empty
+                    if [ -s ~/.ssh/authorized_keys ]; then
+                        (chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys) & spinner $!
+                        echo -e "${GREEN}Public key fetched and added to authorized_keys${RESET}"
+                    else
+                        echo -e "${RED}Failed to retrieve a valid public key from the URL. Continuing with key generation.${RESET}"
+                        ssh_key_source="gen" # Fallback to generation
+                    fi
+                else
+                    echo -e "${RED}Error fetching key from URL. Continuing with key generation.${RESET}"
+                    ssh_key_source="gen" # Fallback to generation
                 fi
                 ;;
             *)
+                # Key Generation (This handles 'gen' and fallback from 'url' failure)
                 echo -e "${BLUE}Generating new RSA key pair${RESET}"
                 sudo rm -rf ~/.ssh
                 mkdir -p ~/.ssh
                 (ssh-keygen -t rsa -b 4096 -C "${user}@${hostname}" -f ~/.ssh/id_rsa -N "" -q) & spinner $!
-                (cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys && chmod 644 ~/.ssh/authorized_keys && chmod 600 ~/.ssh/id_rsa) & spinner $!
+                (cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys && chmod 600 ~/.ssh/id_rsa) & spinner $!
                 echo -e "${GREEN}SSH keys generated${RESET}"
                 echo -e "\n${RED}IMPORTANT: Copy your private key from ~/.ssh/id_rsa before disconnecting${RESET}\n"
                 ;;
@@ -211,7 +225,8 @@ ssh_ufw_hardening() {
             sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
             sudo sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
             sudo sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-            sudo sed -i 's/^#\?UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
+            # Change: UsePAM is often required for other services (e.g. sudo), better to leave it unless you know what you are doing.
+            # sudo sed -i 's/^#\?UsePAM.*/UsePAM no/' /etc/ssh/sshd_config 
             sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
         ) & spinner $!
         echo -e "${GREEN}SSH configuration hardened${RESET}"
