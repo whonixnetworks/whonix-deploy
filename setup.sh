@@ -13,7 +13,7 @@ RED="\033[31m"
 GREEN="\033[32m"
 RESET="\033[0m"
 
-packages=(btop wireguard speedtest-cli tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc)
+packages=(btop wireguard wireguard-tools speedtest-cli unattended-upgrades software-properties-common tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc)
 timezone="unknown"
 flag_file="/var/log/setup-complete.flag"
 
