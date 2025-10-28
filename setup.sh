@@ -523,7 +523,7 @@ git_profile
 usermods
 set_aliases
 ssh_ufw_hardening
-ucare # Added ucare here as it seems it was intended to run after package install
+#ucare
 timezone
 motd
 
