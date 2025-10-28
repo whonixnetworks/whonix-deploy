@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
-# Home Lab Setup Script for Debian/Ubuntu
+# Whonix Initium Script for Debian/Ubuntu
 # Automates initial server configuration with package installation,
 # SSH hardening, Docker setup, and useful aliases.
-# WARNING: This script disables SSH password authentication.
+# WARNING: This script disables SSH password authentication, test before rebooting!
 
 set -euo pipefail
 
-# Colors
 BLUE="\033[34m"
 YELLOW="\033[33m"
 RED="\033[31m"
 GREEN="\033[32m"
 RESET="\033[0m"
 
-# Configuration
-timezone="unknown"
+# packages to install
 packages=(btop tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server)
+
+timezone="unknown"
+
 flag_file="/var/log/setup-complete.flag"
 
-# Spinner / throbber
+# spinner / throbber
 spinner() {
     local pid=$1 delay=0.1 spinstr='|/-\'
     while kill -0 "$pid" 2>/dev/null; do
@@ -31,7 +32,7 @@ spinner() {
     printf "    \b\b\b\b"
 }
 
-# Check system compatibility
+# system compatibility check
 check_system() {
     echo -e "${BLUE}Checking system compatibility${RESET}"
     if ! command -v lsb_release &>/dev/null && [ ! -f /etc/os-release ]; then
@@ -46,13 +47,13 @@ check_system() {
     fi
 
     if ! command -v apt-get &>/dev/null; then
-        echo -e "${RED}This system does not use apt package manager. Exiting.${RESET}"
+        echo -e "${RED}This system is not compatable. Exiting.${RESET}"
         return 1
     fi
 
     case "$distro" in
         ubuntu|debian|linuxmint|pop|elementary|zorin|kali)
-            echo -e "${GREEN}Detected supported distro: $distro${RESET}"
+            echo -e "${GREEN}Distro supported: $distro${RESET}"
             ;;
         *)
             echo -e "${RED}Unsupported distribution: $distro${RESET}"
@@ -61,7 +62,7 @@ check_system() {
     esac
 }
 
-# Add aliases
+# add  ~/.bashrc aliases
 add_alias() {
     local name="$1" def="$2"
     if ! grep -q "^alias $name=" ~/.bashrc 2>/dev/null; then
@@ -69,23 +70,16 @@ add_alias() {
     fi
 }
 
-# Exit message
+# exit message for errors
 exit_message_error() {
-    echo -e "${RED}Setup script has already executed${RESET}"
-    sleep 0.3
-    echo -e "${RED}Aborting script${RESET}"
-    sleep 0.3
-    echo -e "${YELLOW}To override; run command;${RESET}"
-    sleep 0.3
-    echo -e "${RED}sudo rm /var/log/setup-complete.flag${RESET}"
-    echo -e "\n${RED}IMPORTANT: Copy your private key from ~/.ssh/id_rsa before disconnecting${RESET}\n"
+    echo -e "${RED}Script has already executed. Exiting.${RESET}"
+    return 1
 }
 
-# Prevent re-run
+# prevent re-run
 if [ -f "$flag_file" ]; then
     clear
     echo -e "${YELLOW}This script has already been run previously${RESET}"
-    echo -e "${YELLOW}To re-run, delete $flag_file and try again${RESET}"
     exit_message_error
     exit 0
 fi
