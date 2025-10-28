@@ -13,7 +13,7 @@ RED="\033[31m"
 GREEN="\033[32m"
 RESET="\033[0m"
 
-packages=(btop wireguard wireguard-tools speedtest-cli unattended-upgrades software-properties-common tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc)
+packages=(btop wireguard wireguard-tools speedtest-cli unattended-upgrades software-properties-common tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc ucaresystem-core)
 timezone="unknown"
 flag_file="/var/log/setup-complete.flag"
 
@@ -231,12 +231,18 @@ initial_setup() {
 
 # update + install packages
 update_install() {
+    echo -e "${BLUE}Adding utappia/stable PPA${RESET}"
+    (sudo add-apt-repository ppa:utappia/stable -y >/dev/null 2>&1) & spinner $!
+    echo -e "${GREEN}PPA added${RESET}"
+
     echo -e "${BLUE}Updating system packages${RESET}"
     (sudo DEBIAN_FRONTEND=noninteractive apt-get update -y >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}System updated${RESET}"
+
     echo -e "${BLUE}Installing required packages${RESET}"
     (sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}" >/dev/null 2>&1) & spinner $!
     echo -e "${GREEN}Packages installed${RESET}"
+
     echo -e "${BLUE}Upgrading system${RESET}"
     (sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >/dev/null 2>&1) & spinner $!
     (sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y >/dev/null 2>&1) & spinner $!
@@ -338,7 +344,7 @@ ssh_ufw_hardening() {
     echo -e "${BLUE}Configuring UFW${RESET}"
     (sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw) & spinner $!
     echo -e "${GREEN}UFW IPv6 disabled${RESET}"
-    
+
     if [ "$ssh_config_enabled" = true ]; then
         case "$ssh_key_source" in
             url)
@@ -461,6 +467,7 @@ git_profile
 usermods
 set_aliases
 ssh_ufw_hardening
+ucare # Added ucare here as it seems it was intended to run after package install
 timezone
 motd
 
