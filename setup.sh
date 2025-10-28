@@ -380,6 +380,12 @@ ssh_ufw_hardening() {
     fi
 }
 
+# run ucaresystem-core
+ucare() {
+    echo -e "${BLUE}Running ucaresystem-core${RESET}"
+    sudo ucaresystem-core
+}
+
 # timezone
 timezone() {
     echo -e "${BLUE}Detecting timezone${RESET}"
