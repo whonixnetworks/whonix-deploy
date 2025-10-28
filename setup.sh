@@ -13,7 +13,7 @@ RED="\033[31m"
 GREEN="\033[32m"
 RESET="\033[0m"
 
-packages=(btop wireguard wireguard-tools speedtest-cli unattended-upgrades software-properties-common tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc ucaresystem-core)
+packages=(btop wireguard wireguard-tools speedtest-cli bc unattended-upgrades software-properties-common tmux snapd neofetch mc htop iotop iftop wget curl jq nano git coreutils rclone rsync python3 python3-pip figlet p7zip-full docker.io docker-compose-v2 wipe ufw openssh-server ipcalc ucaresystem-core)
 timezone="unknown"
 flag_file="/var/log/setup-complete.flag"
 
@@ -301,6 +301,44 @@ usermods() {
     echo -e "${GREEN}User added to docker group${RESET}"
 }
 
+# set aliases old
+set_aliases_old() {
+    echo -e "${BLUE}Adding shell aliases${RESET}"
+    (
+        cp ~/.bashrc ~/.bashrc.bak
+        add_alias "gs" "git status"
+        add_alias "gc" "git clone"
+        add_alias "gadd" "git add"
+        add_alias "gcmt" "git commit -m"
+        add_alias "gpull" "git pull"
+        add_alias "gpush" "git push"
+        add_alias "update" "sudo apt update && sudo apt upgrade -y"
+        add_alias "install" "sudo apt install -y"
+        add_alias "clean" "sudo apt autoremove --purge"
+        add_alias "c" "clear"
+        add_alias "h" "history"
+        add_alias "df" "df -h"
+        add_alias "du" "du -ch"
+        add_alias "reload" "source ~/.bashrc"
+        add_alias "shutdown" "sudo shutdown -h now"
+        add_alias "reboot" "sudo reboot"
+        add_alias "ll" "ls -lhA"
+        add_alias "la" "ls -A"
+        add_alias "cdc" "cat docker-compose.yml"
+        add_alias "rmdc" "rm docker-compose.yml"
+        add_alias "ndc" "nano docker-compose.yml"
+        add_alias "nenv" "nano .env"
+        add_alias "rmenv" "rm .env"
+        add_alias "dcu" "docker compose up -d"
+        add_alias "dcd" "docker compose down"
+        add_alias "dcr" "docker compose restart"
+        add_alias "dcp" "docker compose pull"
+        add_alias "dcl" "docker compose logs -f"
+        add_alias "dps" "docker ps --format '{{.Names}}'"
+    ) & spinner $!
+    echo -e "${GREEN}Shell aliases added${RESET}"
+}
+
 # set aliases
 set_aliases() {
     echo -e "${BLUE}Adding shell aliases${RESET}"
@@ -335,6 +373,24 @@ set_aliases() {
         add_alias "dcp" "docker compose pull"
         add_alias "dcl" "docker compose logs -f"
         add_alias "dps" "docker ps --format '{{.Names}}'"
+
+        # Append cpuusage function if not already present
+        if ! grep -q "^cpuusage() {" ~/.bashrc 2>/dev/null; then
+            cat << 'EOF' >> ~/.bashrc
+
+cpuusage() {
+  a=($(grep 'cpu ' /proc/stat));
+  idle1=${a[4]};
+  total1=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}));
+  sleep 1;
+  a=($(grep 'cpu ' /proc/stat));
+  idle2=${a[4]};
+  total2=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}));
+  usage=$(echo "scale=2; 100*(1-($idle2-$idle1)/($total2-$total1))" | bc);
+  echo "CPU: ${usage}%";
+}
+EOF
+        fi
     ) & spinner $!
     echo -e "${GREEN}Shell aliases added${RESET}"
 }
