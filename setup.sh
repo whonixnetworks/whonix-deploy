@@ -374,11 +374,11 @@ set_aliases() {
         add_alias "dcl" "docker compose logs -f"
         add_alias "dps" "docker ps --format '{{.Names}}'"
 
-        # Append cpuusage function if not already present
-        if ! grep -q "^cpuusage() {" ~/.bashrc 2>/dev/null; then
+        # Append cpustat function if not already present
+        if ! grep -q "^cpustat() {" ~/.bashrc 2>/dev/null; then
             cat << 'EOF' >> ~/.bashrc
 
-cpuusage() {
+cpustat() {
   a=($(grep 'cpu ' /proc/stat));
   idle1=${a[4]};
   total1=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}));
