@@ -334,6 +334,9 @@ set_aliases_old() {
         add_alias "dcr" "docker compose restart"
         add_alias "dcp" "docker compose pull"
         add_alias "dcl" "docker compose logs -f"
+        add_alias "gc" "git clone"
+        add_alias "gs" "git switch -c"
+        add_alias "py" "python3"
         add_alias "dps" "docker ps --format '{{.Names}}'"
     ) & spinner $!
     echo -e "${GREEN}Shell aliases added${RESET}"
