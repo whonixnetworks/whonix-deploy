@@ -73,14 +73,31 @@ gstat() {
 }
 
 
-cpustat() {
-  a=($(grep 'cpu ' /proc/stat));
-  idle1=${a[4]};
-  total1=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}));
-  sleep 1;
-  a=($(grep 'cpu ' /proc/stat));
-  idle2=${a[4]};
-  total2=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}));
-  usage=$(echo "scale=2; 100*(1-($idle2-$idle1)/($total2-$total1))" | bc);
-  echo "CPU: ${usage}%";
+sstat() {
+    RED="\033[1;31m"
+    GREEN="\033[1;32m"
+    WHITE="\033[0;37m"
+    RESET="\033[0m"
+    a=($(grep 'cpu ' /proc/stat))
+    idle1=${a[4]}
+    total1=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}))
+    sleep 1
+    a=($(grep 'cpu ' /proc/stat))
+    idle2=${a[4]}
+    total2=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}))
+    CPU_USAGE=$(echo "scale=2; 100*(1-($idle2-$idle1)/($total2-$total1))" | bc)
+    MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    MEM_FREE=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+    MEM_USED=$((MEM_TOTAL - MEM_FREE))
+    MEM_PERCENT=$(echo "scale=2; $MEM_USED*100/$MEM_TOTAL" | bc)
+    MEM_USED_MB=$(echo "scale=0; $MEM_USED/1024" | bc)
+    MEM_TOTAL_MB=$(echo "scale=0; $MEM_TOTAL/1024" | bc)
+
+    echo
+    echo -e "${RED}--- System Status (sstat) ---${RESET}"
+    echo -e "${RED}--------------------------${RESET}"
+    echo -e "${GREEN}CPU USAGE:${RESET} ${WHITE}${CPU_USAGE}%${RESET}"
+    echo -e "${GREEN}MEMORY USAGE:${RESET} ${WHITE}${MEM_USED_MB}MB / ${MEM_TOTAL_MB}MB (${MEM_PERCENT}%)${RESET}"
+    echo -e "${RED}--------------------------${RESET}"
 }
+
