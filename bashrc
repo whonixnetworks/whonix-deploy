@@ -92,12 +92,30 @@ sstat() {
     MEM_PERCENT=$(echo "scale=2; $MEM_USED*100/$MEM_TOTAL" | bc)
     MEM_USED_MB=$(echo "scale=0; $MEM_USED/1024" | bc)
     MEM_TOTAL_MB=$(echo "scale=0; $MEM_TOTAL/1024" | bc)
+    UPTIME=$(uptime -p)
+    DISK_INFO=""
+    while read -r line; do
+        mount_point=$(echo $line | awk '{print $2}')
+        fs_name=$(echo $line | awk '{print $1}' | awk -F/ '{print $NF}')
+        # Skip pseudo filesystems
+        if [[ "$mount_point" == "/proc"* || "$mount_point" == "/sys"* || "$mount_point" == "/dev"* ]]; then
+            continue
+        fi
+        disk_used=$(df -m "$mount_point" | awk 'NR==2 {print $3}')
+        disk_total=$(df -m "$mount_point" | awk 'NR==2 {print $2}')
+        disk_percent=$(df -h "$mount_point" | awk 'NR==2 {print $5}')
+        DISK_INFO+="    - $fs_name: ($mount_point) - ${disk_used}MB / ${disk_total}MB ($disk_percent)\n"
+    done < <(mount | grep '^/dev')
 
     echo
     echo -e "${RED}--- System Status (sstat) ---${RESET}"
     echo -e "${RED}--------------------------${RESET}"
     echo -e "${GREEN}CPU USAGE:${RESET} ${WHITE}${CPU_USAGE}%${RESET}"
     echo -e "${GREEN}MEMORY USAGE:${RESET} ${WHITE}${MEM_USED_MB}MB / ${MEM_TOTAL_MB}MB (${MEM_PERCENT}%)${RESET}"
+    echo -e "${GREEN}UPTIME:${RESET} ${WHITE}${UPTIME}${RESET}"
+    echo -e "${RED}--------------------------${RESET}"
+    echo -e "${GREEN}DISK USAGE:${RESET}"
+    echo -e "$DISK_INFO"
     echo -e "${RED}--------------------------${RESET}"
 }
 
