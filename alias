@@ -85,13 +85,12 @@ gstat() {
 		clear
     echo
     echo -e "${RED}--- Git Status (gstat) ---${RESET}"
-    echo -e "${RED}--------------------------${RESET}"
     echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}$REPO_NAME${RESET}"
     echo -e "${GREEN}REMOTE STATUS:${RESET} $PULL_STATUS"
     echo -e "${GREEN}BRANCH:${RESET} ${WHITE}$CURRENT_BRANCH${RESET}"
     echo -e "${GREEN}LAST COMMIT:${RESET} ${WHITE}$LAST_COMMIT_DATE${RESET}"
     echo -e "${GREEN}MESSAGE:${RESET} ${WHITE}$LAST_COMMIT_MESSAGE${RESET}"
-    echo -e "${RED}--------------------------${RESET}"
+    echo
 }
 
 sstat() {
@@ -99,14 +98,14 @@ sstat() {
     GREEN="\033[1;32m"
     WHITE="\033[0;37m"
     RESET="\033[0m"
-    a=($(grep 'cpu ' /proc/stat))
-    idle1=${a[4]}
-    total1=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}))
+    read -r cpu user1 nice1 system1 idle1 iowait1 irq1 softirq1 steal1 guest1 guest_nice1 < /proc/stat
+    total1=$((user1 + nice1 + system1 + idle1 + iowait1 + irq1 + softirq1 + steal1))
     sleep 1
-    a=($(grep 'cpu ' /proc/stat))
-    idle2=${a[4]}
-    total2=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}))
-    CPU_USAGE=$(echo "scale=2; 100*(($total2-$total1)-($idle2-$idle1))/($total2-$total1)" | bc)
+    read -r cpu user2 nice2 system2 idle2 iowait2 irq2 softirq2 steal2 guest2 guest_nice2 < /proc/stat
+    total2=$((user2 + nice2 + system2 + idle2 + iowait2 + irq2 + softirq2 + steal2))
+    total_diff=$((total2 - total1))
+    idle_diff=$((idle2 - idle1))
+    CPU_USAGE=$(awk "BEGIN {printf \"%.2f\", ($total_diff - $idle_diff) * 100.0 / $total_diff}")
     MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2}')
     MEM_FREE=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
     MEM_USED=$((MEM_TOTAL - MEM_FREE))
@@ -117,7 +116,7 @@ sstat() {
     DISK_INFO=""
     while read -r line; do
         device=$(echo "$line" | awk '{print $1}')
-        mount_point=$(echo "$line" | awk '{print $3}')   # <-- fix here
+        mount_point=$(echo "$line" | awk '{print $3}')
         fs_name=$(basename "$device")
         if [[ "$mount_point" == "/proc"* || "$mount_point" == "/sys"* || "$mount_point" == "/dev"* ]]; then
             continue
@@ -127,16 +126,16 @@ sstat() {
         disk_percent=$(df -h "$mount_point" | awk 'NR==2 {print $5}')
         DISK_INFO+="    - $fs_name: ($mount_point) - ${disk_used}MB / ${disk_total}MB ($disk_percent)\n"
     done < <(mount | grep '^/dev')
-		clear
+    clear
     echo
-    echo -e "${RED}--------- System Status (sstat) ----------${RESET}"
-    echo -e "${RED}------------------------------------------${RESET}"
+    echo -e "${RED}--- System Status (sstat) ---${RESET}"
+    echo
     echo -e "${GREEN}UPTIME:${RESET} ${WHITE}${UPTIME}${RESET}"
     echo -e "${GREEN}CPU USAGE:${RESET} ${WHITE}${CPU_USAGE}%${RESET}"
     echo -e "${GREEN}MEMORY USAGE:${RESET} ${WHITE}${MEM_USED_MB}MB / ${MEM_TOTAL_MB}MB (${MEM_PERCENT}%)${RESET}"
     echo -e "${GREEN}DISK USAGE:${RESET}"
     echo -e "$DISK_INFO"
-    echo -e "${RED}------------------------------------------${RESET}"
+    echo
 }
 
 gpsh() {
@@ -157,33 +156,14 @@ gpsh() {
         echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
         return 1
     fi
-    echo -e "${YELLOW}Checking remote for updates...${RESET}"
-    git fetch origin "$CURRENT_BRANCH" >/dev/null 2>&1
-    LOCAL=$(git rev-parse "$CURRENT_BRANCH")
-    REMOTE=$(git rev-parse "origin/$CURRENT_BRANCH")
-    if [ "$LOCAL" != "$REMOTE" ]; then
-        echo
-        echo -e "${RED}Your branch is out of sync with origin/${CURRENT_BRANCH}.${RESET}"
-        printf "%b" "${YELLOW}Would you like to pull now? (y/n): ${RESET}"
-        read PULL_CONFIRM
-        if [[ "$PULL_CONFIRM" =~ ^[Yy]$ ]]; then
-            echo -e "${YELLOW}Pulling latest changes...${RESET}"
-            git pull origin "$CURRENT_BRANCH"
-            echo -e "${GREEN}Pull complete.${RESET}"
-        else
-            echo -e "${RED}Push aborted. Please pull manually before retrying.${RESET}"
-            return 1
-        fi
-    fi
     git add . >/dev/null 2>&1
     git commit -m "$COMMIT_MSG" >/dev/null 2>&1
-		clear
+    clear
     echo
-    echo -e "${RED}--------------- Git Push Confirmation (gpsh) ---------------${RESET}"
+    echo -e "${RED}--- Git Push Confirmation (gpsh) ---${RESET}"
     echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}${REPO_NAME}${RESET}"
     echo -e "${GREEN}BRANCH:${RESET} ${WHITE}${CURRENT_BRANCH}${RESET}"
     echo -e "${GREEN}COMMIT MESSAGE:${RESET} ${WHITE}${COMMIT_MSG}${RESET}"
-    echo -e "${RED}------------------------------------------------------------${RESET}"
     echo
     printf "%b" "${YELLOW}Commit and push? (y/n): ${RESET}"
     read CONFIRM
@@ -191,10 +171,11 @@ gpsh() {
         echo -e "${GREEN}Pushing to origin/${CURRENT_BRANCH}...${RESET}"
         git push origin "$CURRENT_BRANCH"
         echo -e "${GREEN}Push complete.${RESET}"
+        echo
     else
         echo -e "${RED}Push cancelled. Undoing staged commit...${RESET}"
         git reset --soft HEAD~1 >/dev/null 2>&1
         echo -e "${YELLOW}All changes remain staged for editing.${RESET}"
+        echo
     fi
-    echo -e "${RED}------------------------------------------------------------${RESET}"
 }
