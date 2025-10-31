@@ -45,23 +45,33 @@ gforce() {
 }
 
 gstat() {
+    RED="\033[1;31m"
+    GREEN="\033[1;32m"
+    WHITE="\033[0;37m"
+    RESET="\033[0m"
+
     REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
     if [ -z "$REPO_NAME" ]; then
-        echo "Not a Git repository (or no .git directory found)."
+        echo -e "${GREEN}Not a Git repository (or no .git directory found).${RESET}"
         return 1
     fi
+
     LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
-    echo "--- Git Status (gstat) ---"
-    echo "--------------------------"
-    echo "RREPOSITORY: $REPO_NAME"
-    echo "BRANCH: $CURRENT_BRANCH"
-    echo "LAST COMMIT: $LAST_COMMIT_DATE"
-    echo "MESSAGE: $LAST_COMMIT_MESSAGE"
-    echo "--------------------------"
+
+    echo
+    echo -e "${RED}--- Git Status (gstat) ---${RESET}"
+    echo -e "${RED}--------------------------${RESET}"
+    echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}$REPO_NAME${RESET}"
+    echo -e "${GREEN}BRANCH:${RESET} ${WHITE}$CURRENT_BRANCH${RESET}"
+    echo -e "${GREEN}LAST COMMIT:${RESET} ${WHITE}$LAST_COMMIT_DATE${RESET}"
+    echo -e "${GREEN}MESSAGE:${RESET} ${WHITE}$LAST_COMMIT_MESSAGE${RESET}"
+    echo -e "${RED}--------------------------${RESET}"
 }
+
 
 cpustat() {
   a=($(grep 'cpu ' /proc/stat));
