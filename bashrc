@@ -1,5 +1,5 @@
 # System alias
-alias source='source ~/.bashrc'
+#alias reload='source ~/.bashrc'
 alias reboot='sudo reboot'
 alias shutdown='shutdown -h now'
 alias c='clear'
@@ -7,7 +7,7 @@ alias h='history'
 alias dfc='df -h .'
 alias du='du -ch'
 alias bat='batcat'
-alias source='source ~/.bashrc'
+alias reload='source ~/.zshrc'
 
 # Git aliases
 alias gc='git clone'
@@ -30,7 +30,7 @@ alias dcl='docker compose logs -f'
 alias dps='docker ps --format '{{.Names}}''
 
 # Function alias
-update() (
+update() {
     echo "Updating..."
     sudo apt update
     sudo apt upgrade -y
@@ -51,15 +51,15 @@ gstat() {
         echo "Not a Git repository (or no .git directory found)."
         return 1
     fi
-    LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)Jake1996!
+    LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
     echo "--- Git Status (gstat) ---"
-    echo "**RREPOSITORY:** $REPO_NAME"
-    echo "**BRANCH:** $CURRENT_BRANCH"
-    echo "---"
-    echo "**LAST COMMIT:** $LAST_COMMIT_DATE"
-    echo "**MESSAGE:** $LAST_COMMIT_MESSAGE"
+    echo "--------------------------"
+    echo "RREPOSITORY: $REPO_NAME"
+    echo "BRANCH: $CURRENT_BRANCH"
+    echo "LAST COMMIT: $LAST_COMMIT_DATE"
+    echo "MESSAGE: $LAST_COMMIT_MESSAGE"
     echo "--------------------------"
 }
 
