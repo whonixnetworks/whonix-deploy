@@ -118,3 +118,54 @@ sstat() {
     echo -e "${RED}-------------------------------------------------------${RESET}"
 }
 
+gitpsh() {
+    RED="\033[1;31m"
+    GREEN="\033[1;32m"
+    WHITE="\033[0;37m"
+    YELLOW="\033[1;33m"
+    RESET="\033[0m"
+
+    COMMIT_MSG="$1"
+
+    if [ -z "$COMMIT_MSG" ]; then
+        echo -e "${RED}Error:${RESET} No commit message provided."
+        echo -e "${YELLOW}Usage:${RESET} gitpsh \"commit message\""
+        return 1
+    fi
+
+    REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+    if [ -z "$REPO_NAME" ]; then
+        echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
+        return 1
+    fi
+
+    git add . >/dev/null 2>&1
+    git commit -m "$COMMIT_MSG" >/dev/null 2>&1
+
+    echo
+    echo -e "${RED}------ Git Push Confirmation (gitpsh) -----${RESET}"
+    echo -e "${RED}---------${RESET}"
+    echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}${REPO_NAME}${RESET}"
+    echo -e "${GREEN}BRANCH:${RESET} ${WHITE}${CURRENT_BRANCH}${RESET}"
+    echo -e "${GREEN}COMMIT MESSAGE:${RESET} ${WHITE}${COMMIT_MSG}${RESET}"
+    echo -e "${RED}---------${RESET}"
+    echo
+    # Portable read prompt for Bash and Zsh
+    printf "%b" "${YELLOW}Commit and push? (y/n): ${RESET}"
+    read CONFIRM
+
+    if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}Pushing to origin/${CURRENT_BRANCH}...${RESET}"
+        git push origin "$CURRENT_BRANCH"
+        echo -e "${GREEN}Push complete.${RESET}"
+    else
+        echo -e "${RED}Push cancelled. Undoing staged commit.${RESET}"
+        git reset --soft HEAD~1 >/dev/null 2>&1
+        echo -e "${YELLOW}All changes remain staged for editing.${RESET}"
+    fi
+
+    echo -e "${RED}--------------------------------------------------------------${RESET}"
+}
+
