@@ -85,7 +85,7 @@ sstat() {
     a=($(grep 'cpu ' /proc/stat))
     idle2=${a[4]}
     total2=$((${a[1]}+${a[2]}+${a[3]}+${a[4]}+${a[5]}+${a[6]}+${a[7]}))
-    CPU_USAGE=$(echo "scale=2; 100*(1-($idle2-$idle1)/($total2-$total1))" | bc)
+    CPU_USAGE=$(echo "scale=2; 100*(($total2-$total1)-($idle2-$idle1))/($total2-$total1)" | bc)
     MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2}')
     MEM_FREE=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
     MEM_USED=$((MEM_TOTAL - MEM_FREE))
