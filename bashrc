@@ -1,5 +1,6 @@
 # System alias
 #alias reload='source ~/.bashrc'
+alias reload='source ~/.zshrc'
 alias reboot='sudo reboot'
 alias shutdown='shutdown -h now'
 alias c='clear'
@@ -7,7 +8,7 @@ alias h='history'
 alias dfc='df -h .'
 alias du='du -ch'
 alias bat='batcat'
-alias reload='source ~/.zshrc'
+alias py='python3'
 
 # Git aliases
 alias gc='git clone'
@@ -72,7 +73,6 @@ gstat() {
     echo -e "${RED}--------------------------${RESET}"
 }
 
-
 sstat() {
     RED="\033[1;31m"
     GREEN="\033[1;32m"
@@ -95,9 +95,9 @@ sstat() {
     UPTIME=$(uptime -p)
     DISK_INFO=""
     while read -r line; do
-        mount_point=$(echo $line | awk '{print $2}')
-        fs_name=$(echo $line | awk '{print $1}' | awk -F/ '{print $NF}')
-        # Skip pseudo filesystems
+        device=$(echo "$line" | awk '{print $1}')
+        mount_point=$(echo "$line" | awk '{print $3}')   # <-- fix here
+        fs_name=$(basename "$device")
         if [[ "$mount_point" == "/proc"* || "$mount_point" == "/sys"* || "$mount_point" == "/dev"* ]]; then
             continue
         fi
@@ -108,14 +108,13 @@ sstat() {
     done < <(mount | grep '^/dev')
 
     echo
-    echo -e "${RED}--- System Status (sstat) ---${RESET}"
-    echo -e "${RED}--------------------------${RESET}"
+    echo -e "${RED}--------------- System Status (sstat) ----------------${RESET}"
+    echo -e "${RED}------------------------------------------------------${RESET}"
+    echo -e "${GREEN}UPTIME:${RESET} ${WHITE}${UPTIME}${RESET}"
     echo -e "${GREEN}CPU USAGE:${RESET} ${WHITE}${CPU_USAGE}%${RESET}"
     echo -e "${GREEN}MEMORY USAGE:${RESET} ${WHITE}${MEM_USED_MB}MB / ${MEM_TOTAL_MB}MB (${MEM_PERCENT}%)${RESET}"
-    echo -e "${GREEN}UPTIME:${RESET} ${WHITE}${UPTIME}${RESET}"
-    echo -e "${RED}--------------------------${RESET}"
     echo -e "${GREEN}DISK USAGE:${RESET}"
     echo -e "$DISK_INFO"
-    echo -e "${RED}--------------------------${RESET}"
+    echo -e "${RED}-------------------------------------------------------${RESET}"
 }
 
