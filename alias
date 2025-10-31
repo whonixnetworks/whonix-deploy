@@ -52,17 +52,16 @@ update() {
 gstat() {
     RED="\033[1;31m"
     GREEN="\033[1;32m"
+    YELLOW="\033[1;33m"
     WHITE="\033[0;37m"
     RESET="\033[0m"
+    PULL_NEEDED=false
     REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -z "$REPO_NAME" ]; then
         echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
         return 1
     fi
-    git fetch --quiet 2>/dev/null
-    LOCAL=$(git rev-parse @ 2>/dev/null)
-    REMOTE=$(git rev-parse @{u} 2>/dev/null)
     git fetch --quiet 2>/dev/null
     LOCAL=$(git rev-parse @ 2>/dev/null)
     REMOTE=$(git rev-parse @{u} 2>/dev/null)
@@ -73,16 +72,18 @@ gstat() {
     elif git merge-base --is-ancestor "$LOCAL" "$REMOTE" 2>/dev/null; then
         BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null)
         PULL_STATUS="${RED}Pull needed (${BEHIND} commits behind)${RESET}"
+        PULL_NEEDED=true
     elif git merge-base --is-ancestor "$REMOTE" "$LOCAL" 2>/dev/null; then
         AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null)
         PULL_STATUS="${YELLOW}Push needed (${AHEAD} commits ahead)${RESET}"
     else
         PULL_STATUS="${RED}Diverged (fetch/merge needed)${RESET}"
+        PULL_NEEDED=true
     fi
     LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
-		clear
+    clear
     echo
     echo -e "${RED}--- Git Status (gstat) ---${RESET}"
     echo -e "${RED}--------------------------${RESET}"
@@ -92,7 +93,23 @@ gstat() {
     echo -e "${GREEN}LAST COMMIT:${RESET} ${WHITE}$LAST_COMMIT_DATE${RESET}"
     echo -e "${GREEN}MESSAGE:${RESET} ${WHITE}$LAST_COMMIT_MESSAGE${RESET}"
     echo -e "${RED}--------------------------${RESET}"
+
+    if $PULL_NEEDED; then
+        echo
+        echo -e "${YELLOW}A pull is needed. Do you want to run 'git pull' now? (y/N)${RESET} "
+        read -r choice
+        case "$choice" in
+            [yY])
+                echo -e "${GREEN}Running 'git pull' ...${RESET}"
+                git pull
+                ;;
+            *)
+                echo -e "${WHITE}Skipping pull.${RESET}"
+                ;;
+        esac
+    fi
 }
+
 
 sstat() {
     RED="\033[1;31m"
