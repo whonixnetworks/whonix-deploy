@@ -59,6 +59,25 @@ gstat() {
         return 1
     fi
 
+    # Check if pull is needed
+    git fetch --quiet 2>/dev/null
+    LOCAL=$(git rev-parse @ 2>/dev/null)
+    REMOTE=$(git rev-parse @{u} 2>/dev/null)
+    
+    if [ -z "$REMOTE" ]; then
+        PULL_STATUS="${YELLOW}No remote tracking branch${RESET}"
+    elif [ "$LOCAL" = "$REMOTE" ]; then
+        PULL_STATUS="${GREEN}Up to date${RESET}"
+    elif git merge-base --is-ancestor "$LOCAL" "$REMOTE" 2>/dev/null; then
+        BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null)
+        PULL_STATUS="${RED}Pull needed (${BEHIND} commits behind)${RESET}"
+    elif git merge-base --is-ancestor "$REMOTE" "$LOCAL" 2>/dev/null; then
+        AHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null)
+        PULL_STATUS="${YELLOW}Push needed (${AHEAD} commits ahead)${RESET}"
+    else
+        PULL_STATUS="${RED}Diverged (fetch/merge needed)${RESET}"
+    fi
+
     LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
@@ -67,6 +86,7 @@ gstat() {
     echo -e "${RED}--- Git Status (gstat) ---${RESET}"
     echo -e "${RED}--------------------------${RESET}"
     echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}$REPO_NAME${RESET}"
+    echo -e "${GREEN}REMOTE STATUS:${RESET} $PULL_STATUS"
     echo -e "${GREEN}BRANCH:${RESET} ${WHITE}$CURRENT_BRANCH${RESET}"
     echo -e "${GREEN}LAST COMMIT:${RESET} ${WHITE}$LAST_COMMIT_DATE${RESET}"
     echo -e "${GREEN}MESSAGE:${RESET} ${WHITE}$LAST_COMMIT_MESSAGE${RESET}"
