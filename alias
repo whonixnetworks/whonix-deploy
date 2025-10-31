@@ -46,15 +46,28 @@ gstat() {
         echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
         return 1
     fi
+<<<<<<< HEAD:alias
     git fetch --quiet 2>/dev/null
     LOCAL=$(git rev-parse @ 2>/dev/null)
     REMOTE=$(git rev-parse @{u} 2>/dev/null)
+=======
+
+    # Check if pull is needed
+    git fetch --quiet 2>/dev/null
+    LOCAL=$(git rev-parse @ 2>/dev/null)
+    REMOTE=$(git rev-parse @{u} 2>/dev/null)
+    
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     if [ -z "$REMOTE" ]; then
         PULL_STATUS="${YELLOW}No remote tracking branch${RESET}"
     elif [ "$LOCAL" = "$REMOTE" ]; then
         PULL_STATUS="${GREEN}Up to date${RESET}"
+<<<<<<< HEAD:alias
     elif git merge-base --is-ancestor "$LOCAL"
 "$REMOTE" 2>/dev/null; then
+=======
+    elif git merge-base --is-ancestor "$LOCAL" "$REMOTE" 2>/dev/null; then
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
         BEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null)
         PULL_STATUS="${RED}Pull needed (${BEHIND} commits behind)${RESET}"
     elif git merge-base --is-ancestor "$REMOTE" "$LOCAL" 2>/dev/null; then
@@ -63,6 +76,10 @@ gstat() {
     else
         PULL_STATUS="${RED}Diverged (fetch/merge needed)${RESET}"
     fi
+<<<<<<< HEAD:alias
+=======
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     LAST_COMMIT=$(git log -1 --pretty=format:"%ad^%s" --date=format:'%Y-%m-%d %H:%M:%S' HEAD)
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
@@ -121,26 +138,51 @@ sstat() {
     echo -e "$DISK_INFO"
     echo -e "${RED}-------------------------------------------------------${RESET}"
 }
+<<<<<<< HEAD:alias
 gpsh() {
+=======
+
+gitpsh() {
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     RED="\033[1;31m"
     GREEN="\033[1;32m"
     WHITE="\033[0;37m"
     YELLOW="\033[1;33m"
     RESET="\033[0m"
+<<<<<<< HEAD:alias
     COMMIT_MSG="$1"
+=======
+
+    COMMIT_MSG="$1"
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     if [ -z "$COMMIT_MSG" ]; then
         echo -e "${RED}Error:${RESET} No commit message provided."
         echo -e "${YELLOW}Usage:${RESET} gitpsh \"commit message\""
         return 1
     fi
+<<<<<<< HEAD:alias
     REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+=======
+
+    REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     if [ -z "$REPO_NAME" ]; then
         echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
         return 1
     fi
+<<<<<<< HEAD:alias
     git add . >/dev/null 2>&1
     git commit -m "$COMMIT_MSG" >/dev/null 2>&1
+=======
+
+    git add . >/dev/null 2>&1
+    git commit -m "$COMMIT_MSG" >/dev/null 2>&1
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     echo
     echo -e "${RED}------ Git Push Confirmation (gitpsh) -----${RESET}"
     echo -e "${RED}---------${RESET}"
@@ -152,14 +194,29 @@ gpsh() {
     # Portable read prompt for Bash and Zsh
     printf "%b" "${YELLOW}Commit and push? (y/n): ${RESET}"
     read CONFIRM
+<<<<<<< HEAD:alias
+=======
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
     if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
         echo -e "${GREEN}Pushing to origin/${CURRENT_BRANCH}...${RESET}"
         git push origin "$CURRENT_BRANCH"
         echo -e "${GREEN}Push complete.${RESET}"
     else
+<<<<<<< HEAD:alias
         echo -e "${RED}Push cancelled. Undoing
 staged commit.${RESET}"
         git reset --soft HEAD~1 >/dev/null 2>&1        echo -e "${YELLOW}All changes remain staged for editing.${RESET}"
     fi
     echo -e "${RED}--------------------------------------------------------------${RESET}"
 }
+=======
+        echo -e "${RED}Push cancelled. Undoing staged commit.${RESET}"
+        git reset --soft HEAD~1 >/dev/null 2>&1
+        echo -e "${YELLOW}All changes remain staged for editing.${RESET}"
+    fi
+
+    echo -e "${RED}--------------------------------------------------------------${RESET}"
+}
+
+>>>>>>> 06f367db69cc2ba9c9891d26f015cac869372ac4:bashrc
