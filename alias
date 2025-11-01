@@ -115,10 +115,20 @@ gstat() {
 
 
 sstat() {
+    # Color definitions
     RED="\033[1;31m"
     GREEN="\033[1;32m"
-    WHITE="\033[0;37m"
+    YELLOW="\033[1;33m"
+    BLUE="\033[1;34m"
+    MAGENTA="\033[1;35m"
+    CYAN="\033[1;36m"
+    WHITE="\033[1;37m"
+    BRIGHT_CYAN="\033[0;96m"
+    BRIGHT_YELLOW="\033[0;93m"
+    DIM="\033[0;37m"
     RESET="\033[0m"
+    
+    # CPU calculation
     read -r cpu user1 nice1 system1 idle1 iowait1 irq1 softirq1 steal1 guest1 guest_nice1 < /proc/stat
     total1=$((user1 + nice1 + system1 + idle1 + iowait1 + irq1 + softirq1 + steal1))
     sleep 1
@@ -127,13 +137,42 @@ sstat() {
     total_diff=$((total2 - total1))
     idle_diff=$((idle2 - idle1))
     CPU_USAGE=$(awk "BEGIN {printf \"%.2f\", ($total_diff - $idle_diff) * 100.0 / $total_diff}")
+    
+    # Memory calculation
     MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2}')
     MEM_FREE=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
     MEM_USED=$((MEM_TOTAL - MEM_FREE))
     MEM_PERCENT=$(echo "scale=2; $MEM_USED*100/$MEM_TOTAL" | bc)
     MEM_USED_MB=$(echo "scale=0; $MEM_USED/1024" | bc)
     MEM_TOTAL_MB=$(echo "scale=0; $MEM_TOTAL/1024" | bc)
+    
+    # Uptime
     UPTIME=$(uptime -p)
+    
+    # System temperature
+    TEMP_RAW=""
+    TEMP_COLOR=""
+    if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
+        TEMP_RAW=$(cat /sys/class/thermal/thermal_zone0/temp)
+        TEMP_C=$((TEMP_RAW / 1000))
+        
+        if [ $TEMP_C -ge 65 ]; then
+            TEMP_COLOR=$RED
+        elif [ $TEMP_C -ge 30 ]; then
+            TEMP_COLOR=$YELLOW
+        else
+            TEMP_COLOR=$BLUE
+        fi
+        TEMP_DISPLAY="${TEMP_COLOR}${TEMP_C}°C${RESET}"
+    else
+        TEMP_DISPLAY="${DIM}N/A${RESET}"
+    fi
+    
+    # Connectivity info
+    PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo "N/A")
+    PRIVATE_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "N/A")
+    
+    # Disk info
     DISK_INFO=""
     while read -r line; do
         device=$(echo "$line" | awk '{print $1}')
@@ -145,17 +184,24 @@ sstat() {
         disk_used=$(df -m "$mount_point" | awk 'NR==2 {print $3}')
         disk_total=$(df -m "$mount_point" | awk 'NR==2 {print $2}')
         disk_percent=$(df -h "$mount_point" | awk 'NR==2 {print $5}')
-        DISK_INFO+="    - $fs_name: ($mount_point) - ${disk_used}MB / ${disk_total}MB ($disk_percent)\n"
+        DISK_INFO+="    ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}$fs_name${RESET} ${DIM}($mount_point)${RESET} ${BRIGHT_YELLOW}→${RESET} ${WHITE}${disk_used}MB${RESET} ${DIM}/${RESET} ${WHITE}${disk_total}MB${RESET} ${DIM}(${disk_percent})${RESET}\n"
     done < <(mount | grep '^/dev')
+    
+    # Display output
     clear
     echo
-    echo -e "${RED}--- System Status (sstat) ---${RESET}"
+    echo -e "  ${CYAN}════════════════${RESET} ${RED} SYSTEM STATUS ${RESET} ${CYAN}════════════════${RESET}"
     echo
-    echo -e "${GREEN}UPTIME:${RESET} ${WHITE}${UPTIME}${RESET}"
-    echo -e "${GREEN}CPU USAGE:${RESET} ${WHITE}${CPU_USAGE}%${RESET}"
-    echo -e "${GREEN}MEMORY USAGE:${RESET} ${WHITE}${MEM_USED_MB}MB / ${MEM_TOTAL_MB}MB (${MEM_PERCENT}%)${RESET}"
-    echo -e "${GREEN}DISK USAGE:${RESET}"
+    echo -e "  ${GREEN}◆ Uptime:${RESET}         ${WHITE}${UPTIME}${RESET}"
+    echo -e "  ${GREEN}◆ Temperature:${RESET}    ${TEMP_DISPLAY}"
+    echo -e "  ${GREEN}◆ CPU Usage:${RESET}      ${WHITE}${CPU_USAGE}%${RESET}"
+    echo -e "  ${GREEN}◆ Memory:${RESET}         ${WHITE}${MEM_USED_MB}MB${RESET} ${DIM}/${RESET} ${WHITE}${MEM_TOTAL_MB}MB${RESET} ${DIM}(${MEM_PERCENT}%)${RESET}"
+    echo
+    echo -e "  ${YELLOW}▸ DISK USAGE:${RESET}"
     echo -e "$DISK_INFO"
+    echo -e "  ${YELLOW}▸ CONNECTIVITY:${RESET}"
+    echo -e "    ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}Public IP:${RESET}  ${WHITE}${PUBLIC_IP}${RESET}"
+    echo -e "    ${BRIGHT_CYAN}└─${RESET} ${MAGENTA}Private IP:${RESET} ${WHITE}${PRIVATE_IP}${RESET}"
     echo
 }
 
