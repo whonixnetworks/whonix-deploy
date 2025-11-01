@@ -1,8 +1,7 @@
-# System alias
-#alias reload='source ~/.bashrc'
+# System Aliases
 alias reload='source ~/.zshrc'
 alias reboot='sudo reboot'
-alias shutdown='shutdown -h now'
+alias shutdown='sudo shutdown -h now'
 alias c='clear'
 alias h='history'
 alias dfc='df -h .'
@@ -10,56 +9,61 @@ alias du='du -ch'
 alias bat='batcat'
 alias py='python3'
 
-# Git aliases
+# Git Aliases
 alias gc='git clone'
-alias gpush='git push'
-alias gpull='git pull'
 alias gadd='git add .'
 alias gcmt='git commit -m'
+alias gpush='git push'
+alias gpull='git pull'
 
-# Docker aliases
-alias cdc='cat docker-compose.yml'
-alias rmdc='rm docker-compose.yml'
-alias ndc='nano docker-compose.yml'
-alias nenv='nano .env'
-alias rmenv='rm .env'
-alias dcu='docker compose up -d'
-alias dcd='docker compose down'
-alias dcr='docker compose restart'
-alias dcp='docker compose pull'
-alias dcl='docker compose logs -f'
-alias dps='docker ps --format '{{.Names}}''
-
-# Function alias
-update() {
-	  RED="\033[1;31m"
-    GREEN="\033[1;32m"
-    WHITE="\033[0;37m"
-		YELLOW="\033[1;33m"
-    RESET="\033[0m"
-		clear
-    echo -e "{$YELLOW}Updating. Please wait...{$RESET}"
-    sudo apt-get update >/dev/null
-		echo -e "{$GREEN}Update complete{$RESET}"
-		echo -e "{$YELLOW}Upgrading. Please wait...{$RESET}"
-    sudo apt-get upgrade -y >/dev/null
-		echo -e "{$GREEN}Upgrade complete{$RESET}"
-		echo -e "{$YELLOW}Cleaning up. Please wait...{$RESET}"
-    sudo apt autoremove --purge -y
-    echo -e "{$GREEN}Update/Upgrade/Cleanup Complete{$RESET}"
+gpsh() {
+    RED="\033[1;31m"; GREEN="\033[1;32m"; YELLOW="\033[1;33m"
+    CYAN="\033[1;36m"; WHITE="\033[1;37m"; MAGENTA="\033[1;35m"
+    BRIGHT_CYAN="\033[0;96m"; RESET="\033[0m"
+    COMMIT_MSG="$1"
+    if [ -z "$COMMIT_MSG" ]; then
+        echo -e "${RED}Error:${RESET} No commit message provided."
+        echo -e "${YELLOW}Usage:${RESET} gpsh \"commit message\""
+        return 1
+    fi
+    REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [ -z "$REPO_NAME" ]; then
+        echo -e "${RED}Not a Git repository.${RESET}"
+        return 1
+    fi
+    git add . >/dev/null 2>&1
+    git commit -m "$COMMIT_MSG" >/dev/null 2>&1
+    clear
+    echo -e "  ${CYAN}═══════════════ ${RED}GIT PUSH${RESET} ${CYAN}═══════════════${RESET}"
+    echo
+    echo -e "  ${GREEN}◆ Repository:${RESET}      ${WHITE}${REPO_NAME}${RESET}"
+    echo -e "  ${GREEN}◆ Branch:${RESET}          ${WHITE}${CURRENT_BRANCH}${RESET}"
+    echo -e "  ${GREEN}◆ Commit Message:${RESET}  ${WHITE}${COMMIT_MSG}${RESET}"
+    echo
+    printf "%b" "  ${YELLOW}▸ Commit and push? (y/N):${RESET} "
+    read -r CONFIRM
+    if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
+        echo -e "  ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}Pushing to origin/${CURRENT_BRANCH}...${RESET}"
+        git push origin "$CURRENT_BRANCH"
+        echo -e "  ${BRIGHT_CYAN}└─${RESET} ${GREEN}Push complete${RESET}"
+    else
+        echo -e "  ${BRIGHT_CYAN}├─${RESET} ${RED}Push cancelled${RESET}"
+        git reset --soft HEAD~1 >/dev/null 2>&1
+        echo -e "  ${BRIGHT_CYAN}└─${RESET} ${YELLOW}Changes remain staged${RESET}"
+    fi
+    echo
 }
 
 gstat() {
-    RED="\033[1;31m"
-    GREEN="\033[1;32m"
-    YELLOW="\033[1;33m"
-    WHITE="\033[0;37m"
-    RESET="\033[0m"
+    RED="\033[1;31m"; GREEN="\033[1;32m"; YELLOW="\033[1;33m"
+    CYAN="\033[1;36m"; WHITE="\033[1;37m"; MAGENTA="\033[1;35m"
+    BRIGHT_CYAN="\033[0;96m"; RESET="\033[0m"
     PULL_NEEDED=false
     REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -z "$REPO_NAME" ]; then
-        echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
+        echo -e "${RED}Not a Git repository.${RESET}"
         return 1
     fi
     git fetch --quiet 2>/dev/null
@@ -84,118 +88,92 @@ gstat() {
     LAST_COMMIT_DATE=$(echo "$LAST_COMMIT" | cut -d'^' -f1)
     LAST_COMMIT_MESSAGE=$(echo "$LAST_COMMIT" | cut -d'^' -f2)
     clear
+    echo -e "  ${CYAN}═══════════════ ${RED}GIT STATUS${RESET} ${CYAN}═══════════════${RESET}"
     echo
-    echo -e "${RED}--- Git Status (gstat) ---${RESET}"
-    echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}$REPO_NAME${RESET}"
-    echo -e "${GREEN}REMOTE STATUS:${RESET} $PULL_STATUS"
-    echo -e "${GREEN}BRANCH:${RESET} ${WHITE}$CURRENT_BRANCH${RESET}"
-    echo -e "${GREEN}LAST COMMIT:${RESET} ${WHITE}$LAST_COMMIT_DATE${RESET}"
-    echo -e "${GREEN}MESSAGE:${RESET} ${WHITE}$LAST_COMMIT_MESSAGE${RESET}"
-<<<<<<< HEAD
+    echo -e "  ${GREEN}◆ Repository:${RESET}      ${WHITE}${REPO_NAME}${RESET}"
+    echo -e "  ${GREEN}◆ Branch:${RESET}          ${WHITE}${CURRENT_BRANCH}${RESET}"
+    echo -e "  ${GREEN}◆ Remote Status:${RESET}   ${PULL_STATUS}"
     echo
-=======
-    echo -e "${RED}--------------------------${RESET}"
-
+    echo -e "  ${YELLOW}▸ LAST COMMIT:${RESET}"
+    echo -e "    ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}Date:${RESET}    ${WHITE}${LAST_COMMIT_DATE}${RESET}"
+    echo -e "    ${BRIGHT_CYAN}└─${RESET} ${MAGENTA}Message:${RESET} ${WHITE}${LAST_COMMIT_MESSAGE}${RESET}"
+    echo
     if $PULL_NEEDED; then
-        echo
-        echo -e "${YELLOW}A pull is needed. Do you want to run 'git pull' now? (y/N)${RESET} "
+        printf "%b" "  ${YELLOW}▸ Pull is needed. Run 'git pull' now? (y/N):${RESET} "
         read -r choice
-        case "$choice" in
-            [yY])
-                echo -e "${GREEN}Running 'git pull' ...${RESET}"
-                git pull
-                ;;
-            *)
-                echo -e "${WHITE}Skipping pull.${RESET}"
-                ;;
-        esac
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            echo -e "  ${BRIGHT_CYAN}└─${RESET} ${GREEN}Running 'git pull'...${RESET}"
+            git pull
+        else
+            echo -e "  ${BRIGHT_CYAN}└─${RESET} ${YELLOW}Skipping pull${RESET}"
+        fi
+        echo
     fi
->>>>>>> 39a38d9210faa6e8b9018065567fe45d2ede0f73
 }
 
+# Docker Aliases
+alias cdc='cat docker-compose.yml'
+alias ndc='nano docker-compose.yml'
+alias rmdc='rm docker-compose.yml'
+alias nenv='nano .env'
+alias rmenv='rm .env'
 
+alias dcu='docker compose up -d'
+alias dcd='docker compose down'
+alias dcr='docker compose restart'
+alias dcp='docker compose pull'
+alias dcl='docker compose logs -f'
+alias dps="docker ps --format '{{.Names}}'"
+
+# System Alias
 sstat() {
-    # Color definitions
-    RED="\033[1;31m"
-    GREEN="\033[1;32m"
-    YELLOW="\033[1;33m"
-    BLUE="\033[1;34m"
-    MAGENTA="\033[1;35m"
-    CYAN="\033[1;36m"
-    WHITE="\033[1;37m"
-    BRIGHT_CYAN="\033[0;96m"
-    BRIGHT_YELLOW="\033[0;93m"
-    DIM="\033[0;37m"
-    RESET="\033[0m"
-    
-    # CPU calculation
-    read -r cpu user1 nice1 system1 idle1 iowait1 irq1 softirq1 steal1 guest1 guest_nice1 < /proc/stat
+    RED="\033[1;31m"; GREEN="\033[1;32m"; YELLOW="\033[1;33m"
+    BLUE="\033[1;34m"; MAGENTA="\033[1;35m"; CYAN="\033[1;36m"
+    WHITE="\033[1;37m"; BRIGHT_CYAN="\033[0;96m"; BRIGHT_YELLOW="\033[0;93m"
+    DIM="\033[0;37m"; RESET="\033[0m"
+    read -r cpu user1 nice1 system1 idle1 iowait1 irq1 softirq1 steal1 _ < /proc/stat
     total1=$((user1 + nice1 + system1 + idle1 + iowait1 + irq1 + softirq1 + steal1))
     sleep 1
-    read -r cpu user2 nice2 system2 idle2 iowait2 irq2 softirq2 steal2 guest2 guest_nice2 < /proc/stat
+    read -r cpu user2 nice2 system2 idle2 iowait2 irq2 softirq2 steal2 _ < /proc/stat
     total2=$((user2 + nice2 + system2 + idle2 + iowait2 + irq2 + softirq2 + steal2))
     total_diff=$((total2 - total1))
     idle_diff=$((idle2 - idle1))
     CPU_USAGE=$(awk "BEGIN {printf \"%.2f\", ($total_diff - $idle_diff) * 100.0 / $total_diff}")
-    
-    # Memory calculation
     MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk '{print $2}')
     MEM_FREE=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
     MEM_USED=$((MEM_TOTAL - MEM_FREE))
     MEM_PERCENT=$(echo "scale=2; $MEM_USED*100/$MEM_TOTAL" | bc)
-    MEM_USED_MB=$(echo "scale=0; $MEM_USED/1024" | bc)
-    MEM_TOTAL_MB=$(echo "scale=0; $MEM_TOTAL/1024" | bc)
-    
-    # Uptime
+    MEM_USED_MB=$((MEM_USED / 1024))
+    MEM_TOTAL_MB=$((MEM_TOTAL / 1024))
     UPTIME=$(uptime -p)
-    
-    # System temperature
-    TEMP_RAW=""
-    TEMP_COLOR=""
     if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
-        TEMP_RAW=$(cat /sys/class/thermal/thermal_zone0/temp)
-        TEMP_C=$((TEMP_RAW / 1000))
-        
-        if [ $TEMP_C -ge 65 ]; then
-            TEMP_COLOR=$RED
-        elif [ $TEMP_C -ge 30 ]; then
-            TEMP_COLOR=$YELLOW
-        else
-            TEMP_COLOR=$BLUE
-        fi
+        TEMP_C=$(( $(cat /sys/class/thermal/thermal_zone0/temp) / 1000 ))
+        if [ $TEMP_C -ge 65 ]; then TEMP_COLOR=$RED
+        elif [ $TEMP_C -ge 30 ]; then TEMP_COLOR=$YELLOW
+        else TEMP_COLOR=$BLUE; fi
         TEMP_DISPLAY="${TEMP_COLOR}${TEMP_C}°C${RESET}"
     else
         TEMP_DISPLAY="${DIM}N/A${RESET}"
     fi
-    
-    # Connectivity info
     PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo "N/A")
     PRIVATE_IP=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "N/A")
-    
-    # Disk info
     DISK_INFO=""
     while read -r line; do
         device=$(echo "$line" | awk '{print $1}')
         mount_point=$(echo "$line" | awk '{print $3}')
-        fs_name=$(basename "$device")
-        if [[ "$mount_point" == "/proc"* || "$mount_point" == "/sys"* || "$mount_point" == "/dev"* ]]; then
-            continue
-        fi
+        [[ "$mount_point" =~ ^/(proc|sys|dev) ]] && continue
         disk_used=$(df -m "$mount_point" | awk 'NR==2 {print $3}')
         disk_total=$(df -m "$mount_point" | awk 'NR==2 {print $2}')
         disk_percent=$(df -h "$mount_point" | awk 'NR==2 {print $5}')
-        DISK_INFO+="    ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}$fs_name${RESET} ${DIM}($mount_point)${RESET} ${BRIGHT_YELLOW}→${RESET} ${WHITE}${disk_used}MB${RESET} ${DIM}/${RESET} ${WHITE}${disk_total}MB${RESET} ${DIM}(${disk_percent})${RESET}\n"
+        DISK_INFO+="    ${BRIGHT_CYAN}├─${RESET} ${MAGENTA}$(basename "$device")${RESET} ${DIM}($mount_point)${RESET} ${BRIGHT_YELLOW}→${RESET} ${WHITE}${disk_used}MB${RESET}/${WHITE}${disk_total}MB${RESET} ${DIM}(${disk_percent})${RESET}\n"
     done < <(mount | grep '^/dev')
-    
-    # Display output
     clear
-    echo
-    echo -e "  ${CYAN}════════════════${RESET} ${RED} SYSTEM STATUS ${RESET} ${CYAN}════════════════${RESET}"
+    echo -e "  ${CYAN}════════════════ ${RED}SYSTEM STATUS${RESET} ${CYAN}════════════════${RESET}"
     echo
     echo -e "  ${GREEN}◆ Uptime:${RESET}         ${WHITE}${UPTIME}${RESET}"
     echo -e "  ${GREEN}◆ Temperature:${RESET}    ${TEMP_DISPLAY}"
     echo -e "  ${GREEN}◆ CPU Usage:${RESET}      ${WHITE}${CPU_USAGE}%${RESET}"
-    echo -e "  ${GREEN}◆ Memory:${RESET}         ${WHITE}${MEM_USED_MB}MB${RESET} ${DIM}/${RESET} ${WHITE}${MEM_TOTAL_MB}MB${RESET} ${DIM}(${MEM_PERCENT}%)${RESET}"
+    echo -e "  ${GREEN}◆ Memory:${RESET}         ${WHITE}${MEM_USED_MB}MB${RESET}/${WHITE}${MEM_TOTAL_MB}MB${RESET} ${DIM}(${MEM_PERCENT}%)${RESET}"
     echo
     echo -e "  ${YELLOW}▸ DISK USAGE:${RESET}"
     echo -e "$DISK_INFO"
@@ -205,44 +183,25 @@ sstat() {
     echo
 }
 
-gpsh() {
-    RED="\033[1;31m"
-    GREEN="\033[1;32m"
-    WHITE="\033[0;37m"
-    YELLOW="\033[1;33m"
-    RESET="\033[0m"
-    COMMIT_MSG="$1"
-    if [ -z "$COMMIT_MSG" ]; then
-        echo -e "${RED}Error:${RESET} No commit message provided."
-        echo -e "${YELLOW}Usage:${RESET} gpsh \"commit message\""
-        return 1
-    fi
-    REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    if [ -z "$REPO_NAME" ]; then
-        echo -e "${RED}Not a Git repository (or no .git directory found).${RESET}"
-        return 1
-    fi
-    git add . >/dev/null 2>&1
-    git commit -m "$COMMIT_MSG" >/dev/null 2>&1
+update() {
+    RED="\033[1;31m"; GREEN="\033[1;32m"; YELLOW="\033[1;33m"
+    CYAN="\033[1;36m"; WHITE="\033[1;37m"; MAGENTA="\033[1;35m"
+    BRIGHT_CYAN="\033[0;96m"; RESET="\033[0m"
     clear
+    echo -e "  ${CYAN}═══════════════ ${RED}SYSTEM UPDATE${RESET} ${CYAN}═══════════════${RESET}"
     echo
-    echo -e "${RED}--- Git Push Confirmation (gpsh) ---${RESET}"
-    echo -e "${GREEN}REPOSITORY:${RESET} ${WHITE}${REPO_NAME}${RESET}"
-    echo -e "${GREEN}BRANCH:${RESET} ${WHITE}${CURRENT_BRANCH}${RESET}"
-    echo -e "${GREEN}COMMIT MESSAGE:${RESET} ${WHITE}${COMMIT_MSG}${RESET}"
+    echo -e "  ${YELLOW}▸ Updating package lists...${RESET}"
+    sudo apt-get update -qq
+    echo -e "    ${BRIGHT_CYAN}└─${RESET} ${GREEN}Update complete${RESET}"
     echo
-    printf "%b" "${YELLOW}Commit and push? (y/n): ${RESET}"
-    read CONFIRM
-    if [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
-        echo -e "${GREEN}Pushing to origin/${CURRENT_BRANCH}...${RESET}"
-        git push origin "$CURRENT_BRANCH"
-        echo -e "${GREEN}Push complete.${RESET}"
-        echo
-    else
-        echo -e "${RED}Push cancelled. Undoing staged commit...${RESET}"
-        git reset --soft HEAD~1 >/dev/null 2>&1
-        echo -e "${YELLOW}All changes remain staged for editing.${RESET}"
-        echo
-    fi
+    echo -e "  ${YELLOW}▸ Upgrading packages...${RESET}"
+    sudo apt-get upgrade -y -qq
+    echo -e "    ${BRIGHT_CYAN}└─${RESET} ${GREEN}Upgrade complete${RESET}"
+    echo
+    echo -e "  ${YELLOW}▸ Cleaning up...${RESET}"
+    sudo apt autoremove --purge -y -qq
+    echo -e "    ${BRIGHT_CYAN}└─${RESET} ${GREEN}Cleanup complete${RESET}"
+    echo
+    echo -e "  ${MAGENTA}✔ System fully updated${RESET}"
+    echo
 }
